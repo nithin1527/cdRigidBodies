@@ -1,0 +1,461 @@
+
+<!-- 
+Name: Nithin Parepally
+UID: 118818740
+Assignment: (Homework #2: Collision Detection Between Rigid Bodies) 
+
+Notes:
+- I got all my svg icons from Iconify
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Collision Detection Between Rigid Bodies (Nithin Parepally)</title>
+  <!-- cdn imports -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@<0.173.0>/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@<0.173.0>/examples/jsm/"
+      }
+    }
+  </script>
+  <script src="https://cdn.tailwindcss.com/3.3.3"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
+
+  <!-- stylesheet -->
+  <style type="text/tailwindcss">
+    .tab-button { @apply w-1/4 p-4 border-r border-gray-300 font-normal text-center hover:bg-lime-100; }
+    
+    .side-panel { @apply w-1/5 border-r border-gray-300 p-4 min-h-screen; }
+    .main-sim-area { @apply flex flex-col flex-grow; }
+
+    .setting-title {@apply text-lg font-medium text-gray-700 mb-2 text-left pl-2 mt-2;}
+    .top-setting { @apply flex font-normal text-gray-700 items-center justify-between gap-4 border-x border-gray-300 p-3 border-x border-t rounded-t-md; }
+    .setting { @apply flex font-normal text-gray-700 items-center justify-between gap-2 border-x border-gray-300 px-3 py-1; }
+    .setting-range-container { @apply flex font-normal text-gray-700 items-center gap-2 border-x border-gray-300 p-3; }
+    .bottom-setting { @apply font-normal text-gray-700 flex items-center justify-between gap-4 border-x border-gray-300 p-3 border-x border-b rounded-b-md; }
+    
+    .setting-label {@apply text-base font-normal text-gray-700;}
+    .setting-range-label {@apply text-base font-normal text-gray-700;}
+    .setting-input { @apply w-1/4 p-1 border-gray-200 border-2 rounded-md; }
+    .setting-range { @apply w-1/2 p-1 border-gray-200 border-2 rounded-md; }
+
+    .reset-sim-btn {@apply w-full p-3 bg-red-100 text-gray-700 hover:bg-red-200 font-normal mb-0 rounded-md active:scale-95 transition-transform;}
+
+    .random-btn { @apply flex items-center justify-center w-full p-3 bg-white text-gray-700 border-purple-200 border-2 font-normal rounded-md active:scale-95 transition-transform;}
+
+    .non-uniform-active-algo-type {@apply bg-gray-200 rounded-md;}
+    .non-uniform-active-bv-type {@apply bg-gray-200 rounded-md;}
+    .uniform-active-algo-type {@apply bg-gray-200 rounded-md;}
+    .uniform-active-bv-type {@apply bg-gray-200 rounded-md;}
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col">
+  <div class="flex flex-grow w-full bg-white border rounded-md overflow-hidden">
+    
+    <div class="side-panel flex flex-col justify-between">
+      <!-- side panel ui inputs -->
+      <div class="flex-grow">
+
+       <div class="p-4 rounded-md bg-orange-50">
+          <h1 class="text-2xl font-semibold text-gray-800 mb-4">Homework #2: Collision Detection Between Rigid Bodies</h1>
+          <h2>Name: Nithin Parepally</h2>
+          <h2>UID: 118818740</h2>
+       </div>
+
+       <!-- Non-Uniform Size settings -->
+       <div id="non-uniform-size-settings" class="mt-4 px-2">
+        <h2 class="setting-title">Non-Uniform Size Settings</h2>
+
+        <div class="top-setting">
+          <label class="setting-label">Number of Objects</label>
+          <input type="number" class="setting-input" value="10" id="non-uniform-size-num-objects">
+        </div>
+
+        <div class="setting-range-container flex">
+
+          <div class="flex flex-col gap-1 bg-gray-100 p-2 rounded-md">
+
+            <label class="setting-range-label self-start">Size</label>
+            <span class="text-xs text-gray-500">Objects recieve a random size between the min and max values.</span>
+            
+          </div>  
+
+          <div class="flex flex-col gap-2 bg-purple-100 p-2 rounded-md">
+
+            <div class="flex items-center gap-2 justify-end">
+              <label class="setting-label">Min: </label>
+              <input type="number" value="5" class="setting-range" id="non-uniform-size-min-size">
+            </div>
+            
+            <div class="flex items-center gap-2 justify-end">
+              <label class="setting-label">Max: </label>
+              <input type="number" value="20" class="setting-range" id="non-uniform-size-max-size">
+            </div>
+            
+          </div>  
+          
+        </div>
+
+        <div class="bottom-setting">
+          <label class="setting-label">Complexity</label>
+          <input type="number" value="1" class="setting-input" id="non-uniform-size-complexity">
+        </div>
+
+        <div class="flex justify-center mb-1 mt-8">
+          <button id="non-uniform-size-randomize-vel-btn" class="random-btn px-6 w-auto italic">Randomize Velocities 
+            <svg class="inline-block mb-1 ml-2" width="25" height="25" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+              <path fill="purple" d="M440.88 129.37L288.16 40.62a64.14 64.14 0 0 0-64.33 0L71.12 129.37a4 4 0 0 0 0 6.9L254 243.85a4 4 0 0 0 4.06 0L440.9 136.27a4 4 0 0 0-.02-6.9M256 152c-13.25 0-24-7.16-24-16s10.75-16 24-16s24 7.16 24 16s-10.75 16-24 16m-18 118.81L54 163.48a4 4 0 0 0-6 3.46v173.92a48 48 0 0 0 23.84 41.39L234 479.48a4 4 0 0 0 6-3.46V274.27a4 4 0 0 0-2-3.46M96 368c-8.84 0-16-10.75-16-24s7.16-24 16-24s16 10.75 16 24s-7.16 24-16 24m96-32c-8.84 0-16-10.75-16-24s7.16-24 16-24s16 10.75 16 24s-7.16 24-16 24m266-172.49L274 271.56a4 4 0 0 0-2 3.45V476a4 4 0 0 0 6 3.46l162.15-97.23A48 48 0 0 0 464 340.86V167a4 4 0 0 0-6-3.49M320 424c-8.84 0-16-10.75-16-24s7.16-24 16-24s16 10.75 16 24s-7.16 24-16 24m0-88c-8.84 0-16-10.75-16-24s7.16-24 16-24s16 10.75 16 24s-7.16 24-16 24m96 32c-8.84 0-16-10.75-16-24s7.16-24 16-24s16 10.75 16 24s-7.16 24-16 24m0-88c-8.84 0-16-10.75-16-24s7.16-24 16-24s16 10.75 16 24s-7.16 24-16 24"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="my-2 flex">
+          <div class="p-1 px-2 rounded-md bg-gray-100 flex items-center">
+            <!-- info icon -->
+            <svg width="70" height="70" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path fill="gray" d="M12 17q.425 0 .713-.288T13 16v-4q0-.425-.288-.712T12 11t-.712.288T11 12v4q0 .425.288.713T12 17m0-8q.425 0 .713-.288T13 8t-.288-.712T12 7t-.712.288T11 8t.288.713T12 9m0 13q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22m0-2q3.35 0 5.675-2.325T20 12t-2.325-5.675T12 4T6.325 6.325T4 12t2.325 5.675T12 20m0-8"/>
+            </svg>
+
+            <p class="text-xs text-gray-500 ml-2">Pressing the button above will change the velocity of each polyhedron to a random value between 10 m/s & max m/s and the angular velocity to a random value between 1°/s & max°/s. Randomizes the direction too.</p>
+            
+          </div>
+        </div>
+
+        <div class="top-setting">
+          <label class="setting-label">Max Velocity (m/s)</label>
+          <input type="number" value="50" class="setting-input" id="non-uniform-size-init-velocity">
+        </div>
+
+        <div class="bottom-setting">
+          <label class="setting-label">Max Angular Velocity (°/s)</label>
+          <input type="number" class="setting-input" value="5" id="non-uniform-size-init-angular-velocity">
+        </div>
+
+        <!-- active buttons? -->
+        <div id="non-uniform-size-active-btns" class="flex justify-end gap-4 fixed bottom-8 right-8 justify-end">
+
+          <div class="flex flex-row gap-4 self-end">
+            <button id="non-uniform-size-play-btn" class="w-20 h-20 flex p-3 bg-white border border-green-500 text-gray-700 rounded-full shadow-lg active:scale-95 transition-transform items-center justify-center">
+              <!-- play icon svg (searched up play): https://heroicons.com/ -->
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="green" class="w-10 h-10">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+              </svg>               
+            </button>
+    
+            <button id="non-uniform-size-add-poly-objs-btn" class="w-20 h-20 flex p-3 bg-white border border-red-500 text-gray-700 rounded-full shadow-lg active:scale-95 transition-transform items-center justify-center">
+              <svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" class="w-10 h-10">
+                <defs><mask id="ipSAdd0"><g fill="none" stroke-linejoin="round" stroke-width="4"><rect width="36" height="36" x="6" y="6" fill="#fff" stroke="#fff" rx="3"/><path stroke="#000" stroke-linecap="round" d="M24 16v16m-8-8h16"/></g></mask></defs><path fill="pink" d="M0 0h48v48H0z" mask="url(#ipSAdd0)"/>
+              </svg>
+            </button>
+          </div>
+  
+          <div class="p-3 bg-white border border-purple-500 text-gray-700 rounded-md shadow-lg items-center justify-center flex flex-col">
+            
+            <!-- collision detection algorithm -->
+            <div class="flex flex-col mb-4">
+              <span class="text-sm w-fit p-1 bg-purple-100 rounded-md mb-2 text-purple">Algorithm</span>
+              <div class="flex flex-row gap-4">
+                
+                <div class="flex flex-col items-center">
+                  <button id="non-uniform-size-bvh-btn" class="p-2 active:scale-95 transition-transform">
+                    <svg width="36" height="36" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="currentColor" d="M19.5 17c-.13 0-.26 0-.39.04l-1.61-3.25a2.5 2.5 0 0 0-1.75-4.29c-.13 0-.25 0-.39.04l-1.63-3.25c.48-.45.77-1.08.77-1.79a2.5 2.5 0 0 0-5 0c0 .71.29 1.34.76 1.79L8.64 9.54c-.14-.04-.26-.04-.39-.04a2.5 2.5 0 0 0-1.75 4.29l-1.61 3.25C4.76 17 4.63 17 4.5 17a2.5 2.5 0 0 0 0 5A2.5 2.5 0 0 0 7 19.5c0-.7-.29-1.34-.76-1.79l1.62-3.25c.14.04.26.04.39.04s.25 0 .39-.04l1.63 3.25c-.47.45-.77 1.09-.77 1.79a2.5 2.5 0 0 0 5 0A2.5 2.5 0 0 0 12 17c-.13 0-.26 0-.39.04L10 13.79c.46-.45.75-1.08.75-1.79s-.29-1.34-.75-1.79l1.61-3.25c.13.04.26.04.39.04s.26 0 .39-.04L14 10.21c-.45.45-.75 1.09-.75 1.79a2.5 2.5 0 0 0 2.5 2.5c.13 0 .25 0 .39-.04l1.63 3.25c-.47.45-.77 1.09-.77 1.79a2.5 2.5 0 0 0 5 0a2.5 2.5 0 0 0-2.5-2.5"/>
+                    </svg>
+                  </button>
+                  <span class="text-xs mt-1 text-center">BVH</span>
+                </div>
+    
+                <div class="flex flex-col items-center">
+                  <button id="non-uniform-size-brute-force-btn" class="non-uniform-active-algo-type p-2 active:scale-95 transition-transform">
+                    <svg width="36" height="36" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                      <g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path fill="currentColor" d="M8 28a4 4 0 1 0 0-8a4 4 0 0 0 0 8Z"/><path d="M42 8a2 2 0 1 0 0-4a2 2 0 0 0 0 4Zm0 18a2 2 0 1 0 0-4a2 2 0 0 0 0 4Zm0 18a2 2 0 1 0 0-4a2 2 0 0 0 0 4Z"/><path stroke-linecap="round" d="M32 6H20v36h12M12 24h20"/></g>
+                    </svg>
+                  </button>
+                  <span class="text-xs mt-1 text-center">Brute Force</span>
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- bounding volume shape -->
+            <div class="flex flex-col">
+              <span class="text-sm w-fit p-1 bg-purple-100 rounded-md mb-2 text-purple">Bounding Volume</span>
+              <div class="flex flex-row gap-2">
+                <div class="flex flex-col items-center">
+                  <button id="non-uniform-size-sphere-btn" class="non-uniform-active-bv-type p-2 active:scale-95 transition-transform">
+                    <svg width="36" height="36" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3 12c0 1.657 4.03 3 9 3s9-1.343 9-3"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/></g>
+                    </svg>
+                  </button>
+                  <span class="text-xs text-center mt-1">Sphere</span>
+                </div>
+  
+                <div class="flex flex-col items-center ml-4">
+                  <button id="non-uniform-size-aabb-btn" class="p-2 active:scale-95 transition-transform">
+                      <svg width="36" height="36" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <g class="box-outline"><g fill="currentColor" fill-rule="evenodd" class="Vector" clip-rule="evenodd"><path d="m14.179 2.948l4.57 2.64a4.36 4.36 0 0 1 2.18 3.773v5.278a4.36 4.36 0 0 1-2.18 3.774l-4.57 2.639a4.36 4.36 0 0 1-4.358 0l-4.57-2.64a4.36 4.36 0 0 1-2.18-3.773V9.361c0-1.557.831-2.995 2.18-3.774l4.57-2.639a4.36 4.36 0 0 1 4.358 0m-1 1.732a2.36 2.36 0 0 0-2.358 0l-4.57 2.64a2.36 2.36 0 0 0-1.18 2.04v5.28c0 .841.45 1.62 1.18 2.04l4.57 2.64c.73.42 1.628.42 2.358 0l4.57-2.64a2.36 2.36 0 0 0 1.18-2.04V9.36c0-.841-.45-1.62-1.18-2.04z"/><path d="M10.499 11.796L4.696 8.894l.894-1.788l5.803 2.901c.382.191.832.191 1.214 0l5.803-2.901l.895 1.788l-5.803 2.902a3.36 3.36 0 0 1-3.003 0"/><path d="M13 11.428v9.143h-2v-9.143z"/></g></g>
+                      </svg>
+                  </button>
+                  <span class="text-xs text-center mt-1">AABB</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        
+
+       </div>
+
+       <!-- Uniform Size settings -->
+       <div id="uniform-size-settings" class="mt-4 px-2">
+        <h2 class="setting-title">Uniform Size Settings</h2>
+
+        <div class="top-setting">
+          <label class="setting-label">Number of Objects</label>
+          <input type="number" value="20" class="setting-input" id="uniform-size-num-objects">
+        </div>
+
+        <div class="setting">
+          <label class="setting-label">Size</label>
+          <input type="number" value="2" class="setting-input" id="uniform-size-size">
+        </div>
+
+        <div class="bottom-setting">
+          <label class="setting-label">Complexity</label>
+          <input type="number" value="1" class="setting-input" id="uniform-size-complexity">
+        </div>
+
+        <div class="flex justify-center mb-1 mt-8">
+          <button id="uniform-size-randomize-vel-btn" class="random-btn px-6 w-auto italic">Randomize Velocities 
+            <svg class="inline-block ml-3" width="25" height="25" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+              <path fill="purple" d="M440.88 129.37L288.16 40.62a64.14 64.14 0 0 0-64.33 0L71.12 129.37a4 4 0 0 0 0 6.9L254 243.85a4 4 0 0 0 4.06 0L440.9 136.27a4 4 0 0 0-.02-6.9M256 152c-13.25 0-24-7.16-24-16s10.75-16 24-16s24 7.16 24 16s-10.75 16-24 16m-18 118.81L54 163.48a4 4 0 0 0-6 3.46v173.92a48 48 0 0 0 23.84 41.39L234 479.48a4 4 0 0 0 6-3.46V274.27a4 4 0 0 0-2-3.46M96 368c-8.84 0-16-10.75-16-24s7.16-24 16-24s16 10.75 16 24s-7.16 24-16 24m96-32c-8.84 0-16-10.75-16-24s7.16-24 16-24s16 10.75 16 24s-7.16 24-16 24m266-172.49L274 271.56a4 4 0 0 0-2 3.45V476a4 4 0 0 0 6 3.46l162.15-97.23A48 48 0 0 0 464 340.86V167a4 4 0 0 0-6-3.49M320 424c-8.84 0-16-10.75-16-24s7.16-24 16-24s16 10.75 16 24s-7.16 24-16 24m0-88c-8.84 0-16-10.75-16-24s7.16-24 16-24s16 10.75 16 24s-7.16 24-16 24m96 32c-8.84 0-16-10.75-16-24s7.16-24 16-24s16 10.75 16 24s-7.16 24-16 24m0-88c-8.84 0-16-10.75-16-24s7.16-24 16-24s16 10.75 16 24s-7.16 24-16 24"/>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="my-2 flex">
+          <div class="p-1 px-2 rounded-md bg-gray-100 flex items-center">
+            <!-- info icon -->
+            <svg width="70" height="70" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path fill="gray" d="M12 17q.425 0 .713-.288T13 16v-4q0-.425-.288-.712T12 11t-.712.288T11 12v4q0 .425.288.713T12 17m0-8q.425 0 .713-.288T13 8t-.288-.712T12 7t-.712.288T11 8t.288.713T12 9m0 13q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22m0-2q3.35 0 5.675-2.325T20 12t-2.325-5.675T12 4T6.325 6.325T4 12t2.325 5.675T12 20m0-8"/>
+            </svg>
+            <p class="text-xs text-gray-500 ml-2">Pressing the button above will change the velocity of each polyhedron to a random value between 10 m/s & max m/s and the angular velocity to a random value between 1°/s & max°/s. Randomizes the direction too.</p>
+          </div>
+        </div>
+
+        <div class="setting border-t rounded-t-md">
+          <label class="setting-label">Max Velocity (m/s)</label>
+          <input type="number" value="50" class="setting-input" id="uniform-size-init-velocity">
+        </div>
+
+        <div class="bottom-setting">
+          <label class="setting-label">Max Angular Velocity (°/s)</label>
+          <input type="number" class="setting-input" value="5" id="uniform-size-init-angular-velocity">
+        </div>
+        
+       </div>
+
+      <!-- 
+       note to self for the future: 
+       - when dealing with svgs, remember to change ids respective to the simulation otherwise causes conflict issues! 
+       -->
+       <div id="uniform-size-active-btns" class="hidden flex justify-end gap-4 fixed bottom-8 right-8 justify-end">
+
+        <div class="flex flex-row gap-4 self-end">
+          <button id="uniform-size-play-btn" class="w-20 h-20 flex p-3 bg-white border border-green-500 text-gray-700 rounded-full shadow-lg active:scale-95 transition-transform items-center justify-center">
+            <!-- play icon svg (searched up play): https://heroicons.com/ -->
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="green" class="w-10 h-10">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+            </svg>               
+          </button>
+        </div>
+        
+
+        <div class="p-3 bg-white border border-purple-500 text-gray-700 rounded-md shadow-lg items-center justify-center flex flex-col">
+            
+          <!-- collision detection algorithm -->
+          <div class="flex flex-col mb-4">
+            <span class="text-sm w-fit p-1 bg-purple-100 rounded-md mb-2 text-purple">Algorithm</span>
+            <div class="flex flex-row gap-4">
+              
+              <div class="flex flex-col items-center">
+                <button id="uniform-size-bvh-btn" class="p-2 active:scale-95 transition-transform">
+                  <svg width="36" height="36" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="currentColor" d="M19.5 17c-.13 0-.26 0-.39.04l-1.61-3.25a2.5 2.5 0 0 0-1.75-4.29c-.13 0-.25 0-.39.04l-1.63-3.25c.48-.45.77-1.08.77-1.79a2.5 2.5 0 0 0-5 0c0 .71.29 1.34.76 1.79L8.64 9.54c-.14-.04-.26-.04-.39-.04a2.5 2.5 0 0 0-1.75 4.29l-1.61 3.25C4.76 17 4.63 17 4.5 17a2.5 2.5 0 0 0 0 5A2.5 2.5 0 0 0 7 19.5c0-.7-.29-1.34-.76-1.79l1.62-3.25c.14.04.26.04.39.04s.25 0 .39-.04l1.63 3.25c-.47.45-.77 1.09-.77 1.79a2.5 2.5 0 0 0 5 0A2.5 2.5 0 0 0 12 17c-.13 0-.26 0-.39.04L10 13.79c.46-.45.75-1.08.75-1.79s-.29-1.34-.75-1.79l1.61-3.25c.13.04.26.04.39.04s.26 0 .39-.04L14 10.21c-.45.45-.75 1.09-.75 1.79a2.5 2.5 0 0 0 2.5 2.5c.13 0 .25 0 .39-.04l1.63 3.25c-.47.45-.77 1.09-.77 1.79a2.5 2.5 0 0 0 5 0a2.5 2.5 0 0 0-2.5-2.5"/>
+                  </svg>
+                </button>
+                <span class="text-xs mt-1 text-center">BVH</span>
+              </div>
+  
+              <div class="flex flex-col items-center">
+                <button id="uniform-size-brute-force-btn" class="uniform-active-algo-type p-2 active:scale-95 transition-transform">
+                  <svg width="36" height="36" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                    <g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path fill="currentColor" d="M8 28a4 4 0 1 0 0-8a4 4 0 0 0 0 8Z"/><path d="M42 8a2 2 0 1 0 0-4a2 2 0 0 0 0 4Zm0 18a2 2 0 1 0 0-4a2 2 0 0 0 0 4Zm0 18a2 2 0 1 0 0-4a2 2 0 0 0 0 4Z"/><path stroke-linecap="round" d="M32 6H20v36h12M12 24h20"/></g>
+                  </svg>
+                </button>
+                <span class="text-xs mt-1 text-center">Brute Force</span>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- bounding volume shape -->
+          <div class="flex flex-col">
+            <span class="text-sm w-fit p-1 bg-purple-100 rounded-md mb-2 text-purple">Bounding Volume</span>
+            <div class="flex flex-row gap-2">
+              <div class="flex flex-col items-center">
+                <button id="uniform-size-sphere-btn" class="uniform-active-bv-type p-2 active:scale-95 transition-transform">
+                  <svg width="36" height="36" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3 12c0 1.657 4.03 3 9 3s9-1.343 9-3"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/></g>
+                  </svg>
+                </button>
+                <span class="text-xs text-center mt-1">Sphere</span>
+              </div>
+
+              <div class="flex flex-col items-center ml-4">
+                <button id="uniform-size-aabb-btn" class=" p-2 active:scale-95 transition-transform">
+                    <svg width="36" height="36" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <g class="box-outline"><g fill="currentColor" fill-rule="evenodd" class="Vector" clip-rule="evenodd"><path d="m14.179 2.948l4.57 2.64a4.36 4.36 0 0 1 2.18 3.773v5.278a4.36 4.36 0 0 1-2.18 3.774l-4.57 2.639a4.36 4.36 0 0 1-4.358 0l-4.57-2.64a4.36 4.36 0 0 1-2.18-3.773V9.361c0-1.557.831-2.995 2.18-3.774l4.57-2.639a4.36 4.36 0 0 1 4.358 0m-1 1.732a2.36 2.36 0 0 0-2.358 0l-4.57 2.64a2.36 2.36 0 0 0-1.18 2.04v5.28c0 .841.45 1.62 1.18 2.04l4.57 2.64c.73.42 1.628.42 2.358 0l4.57-2.64a2.36 2.36 0 0 0 1.18-2.04V9.36c0-.841-.45-1.62-1.18-2.04z"/><path d="M10.499 11.796L4.696 8.894l.894-1.788l5.803 2.901c.382.191.832.191 1.214 0l5.803-2.901l.895 1.788l-5.803 2.902a3.36 3.36 0 0 1-3.003 0"/><path d="M13 11.428v9.143h-2v-9.143z"/></g></g>
+                    </svg>
+                </button>
+                <span class="text-xs text-center mt-1">AABB</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      </div>
+
+      <div class="p-2 mt-auto">
+        <button id="reset-simulation-btn" class="reset-sim-btn">Reset Simulation</button>
+      </div>
+    </div>
+  
+    <!-- main simulation area -->
+    <div class="main-sim-area">
+      <div class="flex border-b border-gray-300">
+        <button id="non-uniform-size-btn" class="tab-button">Non-Uniform Size</button>
+        <button id="uniform-size-btn" class="tab-button">Uniform Size</button>
+      </div>
+  
+      <div class="scene flex-1">
+        <!-- renderer will attach here -->
+      </div>
+    </div>
+  </div>
+</body>
+
+<!-- button events -->
+<!-- manage tab events -->
+<script type="module">
+  const nonUniformSizeBtn = document.querySelector('#non-uniform-size-btn');
+  const uniformSizeBtn = document.querySelector('#uniform-size-btn');
+  const nonUniformSizeSettings = document.querySelector('#non-uniform-size-settings');
+  const uniformSizeSettings = document.querySelector('#uniform-size-settings');
+  
+  const nonUniformSizeResetBtn = document.querySelector('#non-uniform-size-active-btns');
+  const uniformSizeResetBtn = document.querySelector('#uniform-size-active-btns');
+
+  async function loadUniformSizeSim() {
+    const module = await import('./src/uniform-size-sim.js');
+    module.initUniformSizeSim();
+  }
+
+  async function loadNonUniformSizeSim() {
+    const module = await import('./src/non-uniform-size-sim.js');
+    module.initNonUniformSizeSim();
+  }
+
+  function setActiveTab(tab) {
+    const bgActive = 'bg-lime-100';
+
+    const sceneContainer = document.querySelector('.scene');
+    sceneContainer.innerHTML = '';
+
+    nonUniformSizeBtn.classList.remove(bgActive, 'font-normal');
+    uniformSizeBtn.classList.remove(bgActive, 'font-normal');
+    tab.classList.add(bgActive, 'font-semibold');
+
+    if (tab === nonUniformSizeBtn) {
+      nonUniformSizeSettings.classList.remove('hidden');  
+      uniformSizeSettings.classList.add('hidden');
+      nonUniformSizeResetBtn.classList.remove('hidden');
+      uniformSizeResetBtn.classList.add('hidden');
+      loadNonUniformSizeSim();
+
+    } else {
+      nonUniformSizeSettings.classList.add('hidden');
+      uniformSizeSettings.classList.remove('hidden');
+      nonUniformSizeResetBtn.classList.add('hidden');
+      uniformSizeResetBtn.classList.remove('hidden');
+
+      loadUniformSizeSim();
+    }
+  }
+  nonUniformSizeBtn.addEventListener('click', () => setActiveTab(nonUniformSizeBtn));
+  uniformSizeBtn.addEventListener('click', () => setActiveTab(uniformSizeBtn));
+
+  document.getElementById('reset-simulation-btn').addEventListener('click', () => {
+    const currentTab = window.getUIState().current_tab;
+    localStorage.setItem('current-tab', currentTab);
+    window.location.reload();
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const currentTab = localStorage.getItem('current-tab');
+    if (currentTab === 'uniform-size') {
+      uniformSizeBtn.click();
+    } else {
+      nonUniformSizeBtn.click();
+    }
+  });
+
+  // fix for resizing issue 
+  window.addEventListener('resize', onResize, false);
+  function onResize() { window.location.reload(); }
+</script>
+
+<!-- reads all the settings that the user sets in the side panel -->
+<script>
+  function getUIState() {
+    const nonUniformSizeBtn = document.querySelector('#non-uniform-size-btn');
+
+    const currentTab = nonUniformSizeBtn.classList.contains('bg-lime-100') ? 'non-uniform-size' : 'uniform-size';
+    const nonUniformSizeSettings = {
+      numObjects: parseFloat(document.getElementById('non-uniform-size-num-objects').value),
+      size_min: parseFloat(document.getElementById('non-uniform-size-min-size').value),
+      size_max: parseFloat(document.getElementById('non-uniform-size-max-size').value),
+      complexity: parseFloat(document.getElementById('non-uniform-size-complexity').value),
+      initVelocity: parseFloat(document.getElementById('non-uniform-size-init-velocity').value),
+      initAngularVelocity: parseFloat(document.getElementById('non-uniform-size-init-angular-velocity').value),
+      algoType: document.querySelector('.non-uniform-active-algo-type').id.replace('non-uniform-size-', '').replace('-btn',''),
+      bvType: document.querySelector('.non-uniform-active-bv-type').id.replace('non-uniform-size-', '').replace('-btn','')
+    };
+    const uniformSizeSettings = {
+      numObjects: parseFloat(document.getElementById('uniform-size-num-objects').value),
+      size: parseFloat(document.getElementById('uniform-size-size').value),
+      complexity: parseFloat(document.getElementById('uniform-size-complexity').value),
+      initVelocity: parseFloat(document.getElementById('uniform-size-init-velocity').value),
+      initAngularVelocity: parseFloat(document.getElementById('uniform-size-init-angular-velocity').value),
+      algoType: document.querySelector('.uniform-active-algo-type').id.replace('uniform-size-', '').replace('-btn',''),
+      bvType: document.querySelector('.uniform-active-bv-type').id.replace('uniform-size-', '').replace('-btn','')
+    };
+    return {
+      current_tab: currentTab,
+      "non-uniform-size-settings": nonUniformSizeSettings,
+      "uniform-size-settings": uniformSizeSettings
+    };
+  }
+  window.getUIState = getUIState;
+</script>
+</html>
