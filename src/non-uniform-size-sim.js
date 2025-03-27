@@ -658,6 +658,7 @@ export function initNonUniformSizeSim() {
             if (currObjsInScene.length === 0) {
                 let {numObjects, size_min, size_max, complexity} = window.getUIState()['non-uniform-size-settings'];
                 spawnPolyhedraInBoundingCube(numObjects, size_min, size_max, complexity);
+                root = buildBVH(currObjsInScene);
             }
         } else {
             // not playing, but icon is the play icon?

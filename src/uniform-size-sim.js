@@ -564,6 +564,19 @@ export function initUniformSizeSim() {
         return node;
     }
 
+    // update the bounding spheres of the objects in the BVH
+    // note, this is NOT the same as building the entire hierarchy again!!
+    function updateBVH(root) {
+        if (root.isLeaf) {
+            root.mergeBoundingSpheres();
+        } else {
+            updateBVH(root.left);
+            updateBVH(root.right);
+            let {c, r} = getCenterAndRadius(root);
+            root.bs = new THREE.Sphere(c, r);
+        } 
+    }
+
     function getCenterAndRadius(node) {
         let leftBs = node.left.bs;
         let rightBs = node.right.bs;
@@ -732,7 +745,7 @@ export function initUniformSizeSim() {
         if (isPlaying) {
             let {algoType, bvType} = window.getUIState()['uniform-size-settings'];
             if (algoType === 'bvh') {
-                root = buildBVH(currObjsInScene);
+                updateBVH(root);
                 BVHDetectCollisions(root);
             } else {
                 if (bvType === 'sphere') bfDetectCollisionsSphere();
