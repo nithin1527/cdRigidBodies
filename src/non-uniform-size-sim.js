@@ -60,7 +60,7 @@ export function initNonUniformSizeSim() {
    const boundingCube = new THREE.Mesh(boundingCubeGeom, boundingCubeMat);
    
    // the wireframe prop by default has these diagonals that make it difficult to see what is going on
-   // this is my manual way to remove them
+   // this is my manual way to achieve this
    const edges = new THREE.EdgesGeometry(boundingCubeGeom);
    const wireframeMat = new THREE.LineBasicMaterial({color: 0x000000});
    const wireFrameWoDiagonals = new THREE.LineSegments(edges, wireframeMat);
@@ -440,7 +440,6 @@ export function initNonUniformSizeSim() {
         return dist < (bs1.radius + bs2.radius); // ||c2-c1|| < r1 + r2
     }
 
-    // explanation in report!
     function isSphereInCube(bs) {
         let {minx, maxx, miny, maxy, minz, maxz} = getBoundingCubeBounds();
         let r = bs.radius;
@@ -494,7 +493,6 @@ export function initNonUniformSizeSim() {
         - this is all the BVH stuff
     */
 
-    // ended up just using midpoint, but i was testing other number of objects for leaf nodes
     function centroid(pts) {
         let centroid_of_pts = new THREE.Vector3(0,0,0);
         pts.forEach(pt => centroid_of_pts.add(pt));
@@ -563,6 +561,19 @@ export function initNonUniformSizeSim() {
         return node;
     }
 
+    // update the bounding spheres of the objects in the BVH
+    // note, this is NOT the same as building the entire hierarchy again!!
+    function updateBVH(root) {
+        if (root.isLeaf) {
+            root.mergeBoundingSpheres();
+        } else {
+            updateBVH(root.left);
+            updateBVH(root.right);
+            let {c, r} = getCenterAndRadius(root);
+            root.bs = new THREE.Sphere(c, r);
+        } 
+    }
+
     function getCenterAndRadius(node) {
         let leftBs = node.left.bs;
         let rightBs = node.right.bs;
@@ -620,7 +631,7 @@ export function initNonUniformSizeSim() {
         }
     }
 
-    // helper wrapper in case i need to add more info later
+    // helper wrapper in case i need to add mor info later
     function BVHDetectCollisions(root) {
         BVHDetectCollisionsHelper(root);
     }
@@ -732,7 +743,7 @@ export function initNonUniformSizeSim() {
         if (isPlaying) {
             let {algoType, bvType} = window.getUIState()['non-uniform-size-settings'];
             if (algoType === 'bvh') {
-                root = buildBVH(currObjsInScene);
+                updateBVH(root);
                 BVHDetectCollisions(root);
             } else {
                 if (bvType === 'sphere') bfDetectCollisionsSphere();

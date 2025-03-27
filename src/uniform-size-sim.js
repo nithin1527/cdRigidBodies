@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 /*
-    - majority code here is from non-uniform-size-sim.js
-    - made modifications w.r.t assumption of constant size 
+    - code here is majority from non-uniform-size-sim.js
+    - made modifications w.r.t assumption of constant size
 */
 export function initUniformSizeSim() {
 
@@ -65,7 +65,7 @@ export function initUniformSizeSim() {
    const boundingCube = new THREE.Mesh(boundingCubeGeom, boundingCubeMat);
    
    // the wireframe prop by default has these diagonals that make it difficult to see what is going on
-   // this is my manual way to remove them
+   // this is my manual way to achieve this
    const edges = new THREE.EdgesGeometry(boundingCubeGeom);
    const wireframeMat = new THREE.LineBasicMaterial({color: 0x000000});
    const wireFrameWoDiagonals = new THREE.LineSegments(edges, wireframeMat);
@@ -508,11 +508,11 @@ export function initUniformSizeSim() {
             this.right = null;
             this.objs = objs;
             this.bs = new THREE.Sphere();
-            this.isLeaf = this.objs && this.objs.length <= 2; // leaf has at most 2 objects
-            if (this.isLeaf) this.unionBoundingSpheres();
+            this.isLeaf = this.objs && this.objs.length <= 2; // leaf has at most 2 objects, for a more shallow tree <- my mini optimization
+            if (this.isLeaf) this.mergeBoundingSpheres();
         }
 
-        unionBoundingSpheres() { // merge the bounding spheres of the objects in the node
+        mergeBoundingSpheres() { // merge the bounding spheres of the objects in the node
             if (this.objs.length == 1) {
                 let refBs = this.objs[0].boundingSphere;
                 this.bs.center.copy(refBs.center);
@@ -643,7 +643,6 @@ export function initUniformSizeSim() {
         isPlaying = !isPlaying;
         // my QOL improvement to the play button!!
         if (isPlaying) {
-
             // playing, but icon is the pause icon???
             playBtn.querySelector('svg').innerHTML = `<path fill="white" d="M16 19q-.825 0-1.412-.587T14 17V7q0-.825.588-1.412T16 5t1.413.588T18 7v10q0 .825-.587 1.413T16 19m-8 0q-.825 0-1.412-.587T6 17V7q0-.825.588-1.412T8 5t1.413.588T10 7v10q0 .825-.587 1.413T8 19"/>`
             let {numObjects, size, complexity} = window.getUIState()['uniform-size-settings'];
